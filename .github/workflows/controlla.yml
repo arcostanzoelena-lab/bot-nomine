@@ -1,0 +1,30 @@
+name: Controllo nomine
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  controlla:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Controlla il sito
+        run: python3 monitor.py
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
+      - name: Salva gli articoli già visti
+        run: |
+          git config user.name "bot-nomine"
+          git config user.email "bot-nomine@users.noreply.github.com"
+          if [ -f visti.json ]; then
+            git add visti.json
+            git diff --cached --quiet || (git commit -m "Aggiorna articoli visti" && git push)
+          fi
